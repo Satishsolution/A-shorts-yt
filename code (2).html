@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>16:9 से 9:16 वीडियो ऑटो कन्वर्टर - CapCut प्रो जैसा</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+  :root {
+    --primary-color: #ff416c;
+    --secondary-color: #ff4b2b;
+    --background-dark: #121212;
+    --background-light: #1f1f1f;
+    --text-light: #f0f0f0;
+    --accent-color: #ff6f61;
+    --border-radius: 14px;
+    --transition-speed: 0.3s;
+    --shadow-color: rgba(255,75,43,0.6);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #1f1f1f, #121212);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  h1 {
+    font-weight: 700;
+    font-size: 2.8rem;
+    margin-bottom: 0.1rem;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    user-select: none;
+    text-align: center;
+  }
+
+  p.subtitle {
+    font-size: 1.1rem;
+    color: var(--accent-color);
+    margin-top: 0;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  #upload-area {
+    width: 100%;
+    max-width: 720px;
+    padding: 2rem;
+    border: 3px dashed var(--secondary-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--accent-color);
+    user-select: none;
+    background: var(--background-light);
+    box-shadow: 0 0 12px var(--shadow-color);
+    transition: border-color var(--transition-speed), background-color var(--transition-speed);
+    margin-bottom: 1.5rem;
+  }
+
+  #upload-area.dragover {
+    border-color: var(--primary-color);
+    background-color: #3c1a1a;
+  }
+
+  #upload-area input[type="file"] {
+    display: none;
+  }
+
+  #video-preview, #canvas-container, #converted-video {
+    width: 360px;
+    max-width: 90vw;
+    border-radius: var(--border-radius);
+    box-shadow: 0 0 15px var(--shadow-color);
+    background: black;
+    margin-bottom: 1rem;
+  }
+
+  #video-preview {
+    height: 202.5px; /* 16:9 aspect ratio for 360 width */
+  }
+
+  #canvas-container {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  #canvas-9-16 {
+    width: 360px;
+    height: 640px; /* 9:16 vertical ratio */
+    background: #000;
+    border-radius: var(--border-radius);
+    display: block;
+    margin: 0 auto;
+  }
+
+  #controls {
+    max-width: 720px;
+    width: 100%;
+    margin: 1rem 0 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  label {
+    color: var(--accent-color);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  select, input[type=range], input[type=number] {
+    border-radius: 10px;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    font-size: 1rem;
+    width: 150px;
+    background: var(--background-light);
+    color: var(--text-light);
+  }
+
+  input[type=range] {
+    cursor: pointer;
+  }
+
+  button {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1.75rem;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    user-select: none;
+    max-width: 220px;
+  }
+
+  button:disabled {
+    background: #555555aa;
+    cursor: not-allowed;
+  }
+
+  button:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+  }
+
+  #status {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--secondary-color);
+    user-select: none;
+  }
+
+  footer {
+    margin-top: auto;
+    font-size: 0.9rem;
+    color: #888;
+    user-select: none;
+    text-align: center;
+    padding-bottom: 1rem;
+  }
+
+  /* Tooltip container */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+  }
+
+  /* Tooltip text */
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 180px;
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 6px;
+    position: absolute;
+    z-index: 1;
+    bottom: 130%;
+    left: 50%;
+    margin-left: -90px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.85rem;
+  }
+
+  /* Show the tooltip text when you mouse over the tooltip container */
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<h1>16:9 से 9:16 वीडियो ऑटोमेटिक कन्वर्टर</h1>
+<p class="subtitle">पॉइंट टू पॉइंट ऑटो एडिटिंग के साथ, वीडियो को वर्टिकल शॉर्ट्स में बदलें जैसे CapCut Pro में!</p>
+
+<label id="upload-area" for="video-file" tabindex="0" aria-label="अपना 16:9 MP4 वीडियो अपलोड करें">
+  क्लिक करें या वीडियो यहाँ ड्रैग &amp; ड्रॉप करें (MP4, अधिकतम 500MB)
+  <input type="file" id="video-file" accept="video/mp4" />
+</label>
+
+<video id="video-preview" controls aria-label="ली गई वीडियो का पूर्वावलोकन" style="display:none;"></video>
+
+<div id="canvas-container" style="display:none;">
+  <canvas id="canvas-9-16" width="360" height="640" aria-label="वीडियो कन्वर्टेड वर्टिकल 9:16 कैनवास"></canvas>
+</div>
+
+<div id="controls" aria-label="वीडियो कन्वर्टर विकल्प">
+  <div>
+    <label for="focus-method" class="tooltip">फोकस प्वाइंटर तरीका
+      <span class="tooltiptext">वीडियो के किस भाग पर ज़ूम या पैन करना है चुनें।</span>
+    </label>
+    <select id="focus-method" title="फोकस प्वाइंटर तरीका">
+      <option value="center">मध्य (Center)</option>
+      <option value="face-detection">चेहरा पहचान (Face Detection)</option>
+      <option value="motion-detection">गति पहचान (Motion Detection)</option>
+      <option value="manual">मैनुअल (Manual Position)</option>
+    </select>
+  </div>
+  <div>
+    <label for="zoom-level" class="tooltip">ज़ूम स्तर
+      <span class="tooltiptext">वीडियो को कितना ज़ूम करना है (100%-300%)</span>
+    </label>
+    <input type="range" id="zoom-level" min="100" max="300" step="5" value="150" />
+  </div>
+  <div>
+    <label for="smoothness" class="tooltip">पैन स्मूथनेस
+      <span class="tooltiptext">कैसे धीरे-धीरे पैनिंग/जूम ट्रांजिशन हो (कम से ज्यादा)</span>
+    </label>
+    <input type="range" id="smoothness" min="1" max="20" step="1" value="8" />
+  </div>
+  <div>
+    <label for="manual-x" class="tooltip">मैनुअल X पोजीशन (जब मैनुअल मोड हो)
+      <span class="tooltiptext">क्षैतिज प्वाइंटर स्थिति (%)</span>
+    </label>
+    <input type="number" id="manual-x" min="0" max="100" value="50" disabled />
+  </div>
+  <div>
+    <label for="manual-y" class="tooltip">मैनुअल Y पोजीशन (जब मैनुअल मोड हो)
+      <span class="tooltiptext">वर्टिकल प्वाइंटर स्थिति (%)</span>
+    </label>
+    <input type="number" id="manual-y" min="0" max="100" value="50" disabled />
+  </div>
+</div>
+
+<button id="convert-btn" disabled>वीडियो कन्वर्ट करें (16:9 से 9:16)</button>
+
+<p id="status" role="alert" aria-live="polite"></p>
+
+<div id="download-container" style="display:none; text-align:center;">
+  <a id="download-link" href="#" download="converted-video.webm" style="font-weight:bold; font-size:1.2rem; color: var(--accent-color); text-decoration:none;">डाउनलोड करें कन्वर्टेड वीडियो</a>
+</div>
+
+<script>
+(async function(){
+  const uploadArea = document.getElementById('upload-area');
+  const videoFileInput = document.getElementById('video-file');
+  const videoPreview = document.getElementById('video-preview');
+  const canvasContainer = document.getElementById('canvas-container');
+  const canvas = document.getElementById('canvas-9-16');
+  const ctx = canvas.getContext('2d');
+  const convertBtn = document.getElementById('convert-btn');
+  const statusEl = document.getElementById('status');
+  const downloadContainer = document.getElementById('download-container');
+  const downloadLink = document.getElementById('download-link');
+
+  const focusMethodSelect = document.getElementById('focus-method');
+  const zoomLevelControl = document.getElementById('zoom-level');
+  const smoothnessControl = document.getElementById('smoothness');
+  const manualXControl = document.getElementById('manual-x');
+  const manualYControl = document.getElementById('manual-y');
+
+  let videoFile = null;
+  let videoDuration = 0;
+  let videoElement = null;
+  let animationId = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+
+  function logStatus(text) {
+    statusEl.textContent = text;
+  }
+
+  // Enable/disable manual position inputs
+  focusMethodSelect.addEventListener('change', () => {
+    const manual = focusMethodSelect.value === 'manual';
+    manualXControl.disabled = !manual;
+    manualYControl.disabled = !manual;
+  });
+
+  // Drag & drop styling
+  uploadArea.addEventListener('dragenter', e => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+  uploadArea.addEventListener('dragover', e => e.preventDefault());
+  uploadArea.addEventListener('dragleave', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+  });
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+      const file = e.dataTransfer.files[0];
+      if(validateFile(file)){
+        loadVideo(file);
+      } else {
+        alert('सिर्फ MP4 फ़ाइल स्वीकार की जाती है एवं अधिकतम आकार 500MB है।');
+      }
+    }
+  });
+
+  videoFileInput.addEventListener('change', e => {
+    if(e.target.files.length){
+      const file = e.target.files[0];
+      if(validateFile(file)){
+        loadVideo(file);
+      } else {
+        alert('सिर्फ MP4 फ़ाइल स्वीकार की जाती है एवं अधिकतम आकार 500MB है।');
+      }
+    }
+  });
+
+  function validateFile(file){
+    return file.type === 'video/mp4' && file.size <= 500*1024*1024;
+  }
+
+  function loadVideo(file){
+    videoFile = file;
+    // Reset UI
+    downloadContainer.style.display = 'none';
+    convertBtn.disabled = true;
+    logStatus('वीडियो लोड हो रहा है, कृपया प्रतीक्षा करें...');
+
+    if(videoElement){
+      videoElement.pause();
+      URL.revokeObjectURL(videoElement.src);
+      videoElement.remove();
+      videoElement = null;
+    }
+
+    videoPreview.style.display = 'block';
+    videoPreview.src = URL.createObjectURL(file);
+    videoPreview.load();
+
+    videoPreview.onloadedmetadata = () => {
+      videoDuration = videoPreview.duration;
+      logStatus('वीडियो लोड हो गया। अब आप कन्वर्ट कर सकते हैं।');
+      convertBtn.disabled = false;
+    };
+  }
+
+  // Helper: Face detection (if enabled) or motion detection placeholders
+  async function detectFaceAndGetCoordinates(videoEl) {
+    // Placeholder function: as face detection is complex and requires external libs or APIs,
+    // here we return center coordinates.
+    // Future versions: Integrate Tensorflow.js face detection to get face bounding box and calculate center.
+
+    // Return normalized coordinates (0-1)
+    return {x: 0.5, y: 0.5};
+  }
+
+  // Placeholder motion detection method
+  async function detectMotionCoordinates(videoEl, canvasCtx, width, height) {
+    // Here we implement a simple motion detection by comparing frames with some skips.
+    // For now return center. Can be replaced by advanced optical flow later.
+    return {x: 0.5, y: 0.5};
+  }
+
+  // Compose transformation for each frame to convert 16:9 horizontal into 9:16 vertical with zoom and pan focus
+  async function drawFrameWithFocus(videoEl, ctx, options) {
+    /*
+      options:
+        zoom: scale factor (e.g. 1.5 means 150%)
+        focus: {x:0-1, y:0-1} normalized focus point on original video frame
+        smoothness: factor controlling easing in pan & zoom (not used below but can be for animations)
+    */
+    const vw = videoEl.videoWidth;
+    const vh = videoEl.videoHeight;
+    const cw = ctx.canvas.width;
+    const ch = ctx.canvas.height;
+
+    ctx.clearRect(0,0,cw,ch);
+
+    // Compute scaled video frame width and height considering zoom
+    const zoom = options.zoom;
+    const srcW = vw / zoom;
+    const srcH = vh / zoom;
+
+    // Compute focus center in pixels on source video
+    let focusX = options.focus.x * vw;
+    let focusY = options.focus.y * vh;
+
+    // Clamp source rectangle to stay inside video
+    let srcX = focusX - srcW/2;
+    let srcY = focusY - srcH/2;
+
+    if(srcX < 0) srcX = 0;
+    else if(srcX + srcW > vw) srcX = vw - srcW;
+    if(srcY < 0) srcY = 0;
+    else if(srcY + srcH > vh) srcY = vh - srcH;
+
+    // Draw that part of video onto canvas stretched to 9:16
+    ctx.drawImage(videoEl,
+      srcX, srcY, srcW, srcH,        // source rect
+      0, 0, cw, ch                   // destination rect (full canvas 9:16)
+    );
+  }
+
+  // Smooth transition helper (linear easing) for animation
+  function lerp(a,b,t){ return a + (b - a)*t; }
+
+  // Main convert function
+  async function convertVideo() {
+    if(!videoFile) return;
+    convertBtn.disabled = true;
+    logStatus('कन्वर्शन प्रारंभ हो गया है, कृपया रुके रहें...');
+
+    convertBtn.textContent = 'कन्वर्ट कर रहा है...';
+
+    // Create offscreen video element for controlled playback
+    if(videoElement){
+      videoElement.pause();
+      URL.revokeObjectURL(videoElement.src);
+      videoElement.remove();
+    }
+
+    videoElement = document.createElement('video');
+    videoElement.src = URL.createObjectURL(videoFile);
+    videoElement.crossOrigin = "anonymous";
+    videoElement.muted = true; // autoplay without interaction
+    videoElement.playsInline = true;
+    await videoElement.play().catch(() => {}); // ignore play errors
+
+    // Wait metadata
+    await new Promise(res => {
+      if(videoElement.readyState >= 1) res();
+      else videoElement.onloadedmetadata = () => res();
+    });
+
+    canvasContainer.style.display = 'block';
+    videoPreview.style.display = 'none';
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // Setup MediaRecorder to record canvas output
+    const stream = canvas.captureStream(30); // 30fps capture
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream, {mimeType: 'video/webm;codecs=vp9'});
+
+    mediaRecorder.ondataavailable = (e) => {
+      if(e.data && e.data.size > 0) {
+        recordedChunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, {type: 'video/webm'});
+      const url = URL.createObjectURL(blob);
+      downloadLink.href = url;
+      downloadContainer.style.display = 'block';
+      logStatus('कन्वर्टेड वीडियो तैयार है। नीचे से डाउनलोड करें।');
+      convertBtn.disabled = false;
+      convertBtn.textContent = 'वीडियो कन्वर्ट करें (16:9 से 9:16)';
+    };
+
+    // Get user options
+    const focusMethod = focusMethodSelect.value;
+    const zoomPercent = Number(zoomLevelControl.value);
+    const zoomFactor = zoomPercent / 100;
+    const smoothness = Number(smoothnessControl.value) / 10; // 0.1 to 2.0 easing step
+    let manualX = Number(manualXControl.value) / 100;
+    let manualY = Number(manualYControl.value) / 100;
+
+    // Prepare motion / face data
+    let focusPoint = {x:0.5, y:0.5}; // default center focus
+    if(focusMethod === 'face-detection') {
+      logStatus('चेहरा पहचान की तैयारी कर रहा है (चालू संस्करण केवल केंद्र पर फोकस करता है)...');
+      try {
+        focusPoint = await detectFaceAndGetCoordinates(videoElement);
+      } catch(e) {
+        logStatus('चेहरा पहचान विफल, केन्द्र पर फोकस कर रहा है।');
+      }
+    } else if(focusMethod === 'motion-detection') {
+      logStatus('गति पहचान की तैयारी कर रहा है (चालू संस्करण केवल केंद्र पर फोकस करता है)...');
+      try {
+        focusPoint = await detectMotionCoordinates(videoElement, ctx, width, height);
+      } catch(e) {
+        logStatus('गति पहचान विफल, केन्द्र पर फोकस कर रहा है।');
+      }
+    } else if(focusMethod === 'manual') {
+      focusPoint.x = manualX;
+      focusPoint.y = manualY;
+      logStatus(`मैनुअल प्वाइंटर सक्रिय: X: ${(manualX*100).toFixed(0)}%, Y: ${(manualY*100).toFixed(0)}%`);
+    } else {
+      logStatus('मध्य फोकस पर सेट किया गया है।');
+    }
+
+    convertBtn.textContent = 'कन्वर्टिंग वीडियो...';
+
+    // Animate video playing, capture frames into canvas with focus zoom & pan
+    // We'll use a smooth focus position; here we just keep fixed focus
+    const frameRate = 30;
+    const duration = videoElement.duration;
+    const frameCount = Math.floor(duration * frameRate);
+
+    // Start recording
+    recordedChunks = [];
+    mediaRecorder.start();
+
+    // Play video for canvas rendering
+    videoElement.currentTime = 0;
+    videoElement.play();
+
+    let lastTime = performance.now();
+    let renderingIndex = 0;
+
+    function render() {
+      if(videoElement.paused || videoElement.ended || renderingIndex >= frameCount){
+        mediaRecorder.stop();
+        videoElement.pause();
+        return;
+      }
+
+      // Draw current frame with zoom & focus
+      drawFrameWithFocus(videoElement, ctx, {
+        zoom: zoomFactor,
+        focus: focusPoint,
+        smoothness: smoothness
+      });
+
+      renderingIndex++;
+      // Advance video time based on fps
+      videoElement.currentTime = renderingIndex / frameRate;
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  }
+
+  convertBtn.addEventListener('click', convertVideo);
+
+})();
+</script>
+
+</body>
+</html>
+
